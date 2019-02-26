@@ -140,7 +140,8 @@ def _copy(master_fd, master_read=_read, stdin_read=_read):
         if master_fd in rfds:
             data = master_read(master_fd)
             if not data:  # Reached EOF.
-                fds.remove(master_fd)
+                return    # Assume the child process has exited and is
+                          # unreachable, so we clean up.
             else:
                 os.write(STDOUT_FILENO, data)
         if STDIN_FILENO in rfds:
