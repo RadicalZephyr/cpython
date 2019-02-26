@@ -138,7 +138,12 @@ def _copy(master_fd, master_read=_read, stdin_read=_read):
     while fds:
         rfds, wfds, xfds = select(fds, [], [])
         if master_fd in rfds:
-            data = master_read(master_fd)
+            # Some OSes signal EOF by returning an empty byte string,
+            # some throw OSErrors.
+            try:
+                data = master_read(master_fd)
+            except OSError:
+                data = b""
             if not data:  # Reached EOF.
                 return    # Assume the child process has exited and is
                           # unreachable, so we clean up.
@@ -167,8 +172,6 @@ def spawn(argv, master_read=_read, stdin_read=_read):
         restore = False
     try:
         _copy(master_fd, master_read, stdin_read)
-    except OSError:
-        pass
     finally:
         if restore:
             tcsetattr(STDIN_FILENO, tty.TCSAFLUSH, mode)
