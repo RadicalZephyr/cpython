@@ -7,8 +7,10 @@
 # Author: Steen Lumholt -- with additions by Guido.
 
 from select import select
+from os import close, waitpid
 import os
 import sys
+from tty import setraw, tcgetattr, tcsetattr
 import tty
 
 __all__ = ["openpty","fork","spawn"]
@@ -157,16 +159,18 @@ def spawn(argv, master_read=_read, stdin_read=_read):
     if pid == CHILD:
         os.execlp(argv[0], *argv)
     try:
-        mode = tty.tcgetattr(STDIN_FILENO)
-        tty.setraw(STDIN_FILENO)
-        restore = 1
+        mode = tcgetattr(STDIN_FILENO)
+        setraw(STDIN_FILENO)
+        restore = True
     except tty.error:    # This is the same as termios.error
-        restore = 0
+        restore = False
     try:
         _copy(master_fd, master_read, stdin_read)
     except OSError:
+        pass
+    finally:
         if restore:
-            tty.tcsetattr(STDIN_FILENO, tty.TCSAFLUSH, mode)
+            tcsetattr(STDIN_FILENO, tty.TCSAFLUSH, mode)
 
-    os.close(master_fd)
-    return os.waitpid(pid, 0)[1]
+    close(master_fd)
+    return waitpid(pid, 0)[1]
