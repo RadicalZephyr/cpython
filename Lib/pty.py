@@ -150,6 +150,7 @@ def _copy(master_fd, master_read=_read, stdin_read=_read):
                           # unreachable, so we clean up.
             else:
                 os.write(STDOUT_FILENO, data)
+
         if STDIN_FILENO in rfds:
             data = stdin_read(STDIN_FILENO)
             if not data:
@@ -162,15 +163,18 @@ def spawn(argv, master_read=_read, stdin_read=_read):
     if type(argv) == type(''):
         argv = (argv,)
     sys.audit('pty.spawn', argv)
+
     pid, master_fd = fork()
     if pid == CHILD:
         os.execlp(argv[0], *argv)
+
     try:
         mode = tcgetattr(STDIN_FILENO)
         setraw(STDIN_FILENO)
         restore = True
     except tty.error:    # This is the same as termios.error
         restore = False
+
     try:
         _copy(master_fd, master_read, stdin_read)
     finally:
