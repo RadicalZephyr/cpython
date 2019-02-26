@@ -13,7 +13,7 @@ import sys
 from tty import setraw, tcgetattr, tcsetattr
 import tty
 
-__all__ = ["openpty","fork","spawn"]
+__all__ = ["openpty", "fork", "spawn"]
 
 STDIN_FILENO = 0
 STDOUT_FILENO = 1
@@ -107,8 +107,8 @@ def fork():
         os.dup2(slave_fd, STDIN_FILENO)
         os.dup2(slave_fd, STDOUT_FILENO)
         os.dup2(slave_fd, STDERR_FILENO)
-        if (slave_fd > STDERR_FILENO):
-            os.close (slave_fd)
+        if slave_fd > STDERR_FILENO:
+            os.close(slave_fd)
 
         # Explicitly open the tty to make it become a controlling tty.
         tmp_fd = os.open(os.ttyname(STDOUT_FILENO), os.O_RDWR)
@@ -136,7 +136,8 @@ def _copy(master_fd, master_read=_read, stdin_read=_read):
             standard input -> pty master    (stdin_read)"""
     fds = [master_fd, STDIN_FILENO]
     while fds:
-        rfds, wfds, xfds = select(fds, [], [])
+        rfds, _wfds, _xfds = select(fds, [], [])
+
         if master_fd in rfds:
             # Some OSes signal EOF by returning an empty byte string,
             # some throw OSErrors.
